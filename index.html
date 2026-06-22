@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="رفيق المشي" />
+  <title>رفيق المشي</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root{
+      --bg:#eef7f5; --card:#ffffff; --text:#14312d; --muted:#64748b;
+      --primary:#0f766e; --primary2:#14b8a6; --danger:#dc2626; --warn:#f59e0b;
+      --ok:#16a34a; --line:#d9e7e4; --shadow:0 14px 38px rgba(15,118,110,.16);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;
+      background:linear-gradient(180deg,#dff5f1 0%,var(--bg) 35%,#f8fbfb 100%);
+      color:var(--text); min-height:100vh;
+    }
+    .app{max-width:980px;margin:auto;padding:18px 14px 90px}
+    header{
+      background:linear-gradient(135deg,var(--primary),#0b4f4a);
+      color:#fff;border-radius:26px;padding:22px;box-shadow:var(--shadow);
+      position:relative;overflow:hidden;
+    }
+    header:after{
+      content:"";position:absolute;inset:auto -40px -60px auto;width:180px;height:180px;
+      background:rgba(255,255,255,.12);border-radius:50%;
+    }
+    h1{margin:0 0 6px;font-size:30px}
+    .sub{opacity:.92;font-size:14px;line-height:1.7}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+    .card{
+      background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.7);
+      border-radius:22px;padding:16px;box-shadow:0 8px 22px rgba(2,44,39,.08);
+    }
+    .stat{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .label{color:var(--muted);font-size:13px}
+    .value{font-size:25px;font-weight:800;color:var(--primary)}
+    .unit{font-size:12px;color:var(--muted);font-weight:600}
+    .mainTimer{text-align:center;padding:18px 10px}
+    .timer{font-size:54px;letter-spacing:1px;font-weight:900;color:#0b4f4a}
+    .status{font-size:13px;color:var(--muted);line-height:1.7}
+    .buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+    button,input,select,textarea{
+      font:inherit;border-radius:16px;border:1px solid var(--line);outline:none;
+    }
+    button{
+      border:0;padding:14px 12px;font-weight:800;color:#fff;background:var(--primary);
+      cursor:pointer;box-shadow:0 8px 18px rgba(15,118,110,.18);
+    }
+    button.secondary{background:#334155}
+    button.light{background:#fff;color:var(--primary);border:1px solid var(--line);box-shadow:none}
+    button.danger{background:var(--danger)}
+    button.warn{background:var(--warn)}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .tabs{
+      position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.94);
+      backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;gap:6px;
+      padding:8px 8px calc(8px + env(safe-area-inset-bottom));z-index:20;
+    }
+    .tab{
+      flex:1;background:transparent;color:var(--muted);box-shadow:none;border-radius:16px;
+      padding:10px 4px;font-size:12px;
+    }
+    .tab.active{background:#d8f3ef;color:var(--primary)}
+    section{display:none;margin-top:14px}
+    section.active{display:block}
+    .panel{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:16px;margin-top:12px;box-shadow:0 8px 22px rgba(2,44,39,.06)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+    .field label{font-size:13px;color:var(--muted);font-weight:700}
+    input,select,textarea{padding:13px;background:#fbffff;color:var(--text)}
+    textarea{min-height:80px;resize:vertical}
+    .progressWrap{height:14px;background:#e2eee9;border-radius:99px;overflow:hidden;margin-top:8px}
+    .progress{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary2));width:0%}
+    .historyItem{border:1px solid var(--line);border-radius:18px;padding:12px;margin:10px 0;background:#fbffff}
+    .historyTop{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .badge{font-size:12px;padding:5px 9px;border-radius:999px;background:#e0f2fe;color:#0369a1;font-weight:800}
+    .badge.ok{background:#dcfce7;color:#166534}
+    .badge.warn{background:#fef3c7;color:#92400e}
+    .small{font-size:12px;color:var(--muted);line-height:1.7}
+    .toast{
+      position:fixed;top:12px;left:12px;right:12px;background:#0f172a;color:#fff;
+      border-radius:18px;padding:14px;box-shadow:0 12px 30px rgba(0,0,0,.25);
+      z-index:50;display:none;line-height:1.7;
+    }
+    .toast.show{display:block}
+    .installBox{background:#fff7ed;border-color:#fed7aa}
+    .notice{padding:12px;border-radius:18px;background:#f0fdfa;border:1px solid #99f6e4;color:#115e59;line-height:1.8;font-size:13px}
+    .dangerText{color:var(--danger);font-weight:800}
+    @media (min-width:760px){
+      .grid{grid-template-columns:repeat(4,1fr)}
+      .layout{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+      .timer{font-size:68px}
+    }
+  </style>
+</head>
+<body>
+  <div class="toast" id="toast"></div>
+
+  <div class="app">
+    <header>
+      <h1>🚶‍♂️ رفيق المشي</h1>
+      <div class="sub">
+        تطبيق PWA للآيفون لتتبع المشي، الأهداف، السجل، والتنبيهات الذكية.  
+        تتبع GPS يعمل عندما يكون التطبيق مفتوحًا؛ أما الشاشة المغلقة فنعتمد على التذكير والتسجيل السريع.
+      </div>
+    </header>
+
+    <section id="home" class="active">
+      <div class="layout">
+        <div>
+          <div class="panel mainTimer">
+            <div class="label">جلسة المشي الحالية</div>
+            <div class="timer" id="timer">00:00:00</div>
+            <div class="status" id="gpsStatus">جاهز للبدء. افتح الموقع عند الطلب للحصول على المسافة والسرعة.</div>
+            <div class="buttons">
+              <button id="startBtn">ابدأ المشي</button>
+              <button id="pauseBtn" class="warn" disabled>إيقاف مؤقت</button>
+              <button id="finishBtn" class="secondary" disabled>إنهاء وحفظ</button>
+              <button id="resetBtn" class="light">تصفير</button>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="card stat"><div><div class="label">المسافة</div><div class="value" id="distance">0.00</div><div class="unit">كم</div></div><div>📍</div></div>
+            <div class="card stat"><div><div class="label">السرعة</div><div class="value" id="speed">0.0</div><div class="unit">كم/س</div></div><div>⚡</div></div>
+            <div class="card stat"><div><div class="label">الخطوات</div><div class="value" id="steps">0</div><div class="unit">تقديري</div></div><div>👟</div></div>
+            <div class="card stat"><div><div class="label">السعرات</div><div class="value" id="calories">0</div><div class="unit">تقديري</div></div><div>🔥</div></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="panel">
+            <h3 style="margin-top:0">هدف اليوم</h3>
+            <div class="small" id="goalText"></div>
+            <div class="progressWrap"><div class="progress" id="goalProgress"></div></div>
+            <div class="small" id="goalPercent" style="margin-top:8px">0%</div>
+          </div>
+
+          <div class="panel installBox">
+            <h3 style="margin-top:0">📱 تشغيل على الآيفون</h3>
+            <div class="small">
+              من Safari اضغط زر المشاركة ثم <b>إضافة إلى الشاشة الرئيسية</b>.  
+              إشعارات الشاشة المغلقة تحتاج iOS 16.4+ وموافقة المستخدم، وتحتاج خدمة Push خارجية في النسخة القادمة.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="manual">
+      <div class="panel">
+        <h3 style="margin-top:0">تسجيل مشي سريع</h3>
+        <div class="notice">استخدم هذا الخيار إذا مشيت والشاشة مغلقة أو توقف GPS. المهم لا تخسر إنجاز اليوم.</div>
+        <div class="row" style="margin-top:12px">
+          <div class="field"><label>المدة بالدقائق</label><input id="manualMinutes" type="number" min="1" placeholder="30"></div>
+          <div class="field"><label>المسافة بالكيلومتر</label><input id="manualKm" type="number" step="0.01" min="0" placeholder="2.0"></div>
+        </div>
+        <div class="field"><label>ملاحظات</label><textarea id="manualNotes" placeholder="مثلاً: مشي خفيف، طريق صاعد..."></textarea></div>
+        <button id="saveManual">حفظ المشي</button>
+      </div>
+    </section>
+
+    <section id="history">
+      <div class="panel">
+        <h3 style="margin-top:0">السجل</h3>
+        <div class="grid">
+          <div class="card"><div class="label">إجمالي الأسبوع</div><div class="value" id="weekKm">0.00</div><div class="unit">كم</div></div>
+          <div class="card"><div class="label">دقائق الأسبوع</div><div class="value" id="weekMin">0</div><div class="unit">دقيقة</div></div>
+          <div class="card"><div class="label">أيام الإنجاز</div><div class="value" id="streak">0</div><div class="unit">متتالية</div></div>
+          <div class="card"><div class="label">عدد الجلسات</div><div class="value" id="sessionsCount">0</div><div class="unit">جلسة</div></div>
+        </div>
+        <div id="historyList"></div>
+        <button class="danger" id="clearHistory">حذف السجل</button>
+      </div>
+    </section>
+
+    <section id="settings">
+      <div class="panel">
+        <h3 style="margin-top:0">الإعدادات</h3>
+        <div class="row">
+          <div class="field"><label>هدف الدقائق يوميًا</label><input id="goalMinutes" type="number" min="1"></div>
+          <div class="field"><label>هدف المسافة يوميًا / كم</label><input id="goalKm" type="number" step="0.1" min="0"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>طول الخطوة التقريبي / متر</label><input id="stepLength" type="number" step="0.01" min="0.3" max="1.5"></div>
+          <div class="field"><label>الوزن لحساب السعرات / كغ</label><input id="weightKg" type="number" min="20" max="250"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>وقت تذكير المشي</label><input id="walkTime" type="time"></div>
+          <div class="field"><label>تذكير مسائي</label><input id="eveningTime" type="time"></div>
+        </div>
+        <button id="saveSettings">حفظ الإعدادات</button>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin-top:0">التنبيهات الحالية</h3>
+        <div class="small">
+          هذه النسخة تشغّل تنبيهات داخل التطبيق عندما يكون مفتوحًا.  
+          إشعارات الآيفون والشاشة مغلقة تحتاج Web Push حقيقي في نسخة ثانية.
+        </div>
+        <div class="buttons">
+          <button id="enableLocalNotify">تفعيل تنبيه المتصفح</button>
+          <button id="testNotify" class="secondary">اختبار تنبيه</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin-top:0">نسخة احتياطية</h3>
+        <div class="buttons">
+          <button id="exportData">تصدير JSON</button>
+          <button id="importBtn" class="secondary">استيراد JSON</button>
+        </div>
+        <input id="importFile" type="file" accept="application/json" style="display:none">
+      </div>
+    </section>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="home">الرئيسية</button>
+    <button class="tab" data-tab="manual">تسجيل سريع</button>
+    <button class="tab" data-tab="history">السجل</button>
+    <button class="tab" data-tab="settings">الإعدادات</button>
+  </nav>
+
+<script>
+const $ = (id)=>document.getElementById(id);
+const STORE = "walking_pwa_v1";
+const defaultState = {
+  settings:{goalMinutes:30, goalKm:2, stepLength:0.75, weightKg:75, walkTime:"18:00", eveningTime:"21:00"},
+  sessions:[]
+};
+let state = loadState();
+
+let running=false, paused=false, startTime=0, elapsedBeforePause=0, timerInt=null, watchId=null;
+let lastPos=null, distanceM=0, currentSpeedKmh=0;
+
+function loadState(){
+  try { return {...defaultState, ...(JSON.parse(localStorage.getItem(STORE))||{})}; }
+  catch(e){ return structuredClone(defaultState); }
+}
+function saveState(){ localStorage.setItem(STORE, JSON.stringify(state)); }
+function toast(msg){
+  const el=$("toast"); el.innerHTML=msg; el.classList.add("show");
+  setTimeout(()=>el.classList.remove("show"), 3800);
+}
+function fmtTime(ms){
+  const s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+  return [h,m,sec].map(v=>String(v).padStart(2,"0")).join(":");
+}
+function nowElapsed(){ return running ? elapsedBeforePause + (paused?0:Date.now()-startTime) : 0; }
+function toRad(x){return x*Math.PI/180}
+function haversine(a,b){
+  const R=6371000;
+  const dLat=toRad(b.latitude-a.latitude), dLon=toRad(b.longitude-a.longitude);
+  const lat1=toRad(a.latitude), lat2=toRad(b.latitude);
+  const x=Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
+  return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+function updateUI(){
+  const elapsed=nowElapsed();
+  $("timer").textContent=fmtTime(elapsed);
+  $("distance").textContent=(distanceM/1000).toFixed(2);
+  $("speed").textContent=currentSpeedKmh.toFixed(1);
+  const steps=Math.round(distanceM / Math.max(0.3, Number(state.settings.stepLength)||0.75));
+  $("steps").textContent=steps.toLocaleString("en-US");
+  // rough walking kcal: 0.57 * weight kg * distance km
+  $("calories").textContent=Math.round(0.57*(Number(state.settings.weightKg)||75)*(distanceM/1000));
+  updateGoal();
+}
+function updateGoal(){
+  const today = todaySessions();
+  const currentMin = nowElapsed()/60000;
+  const currentKm = distanceM/1000;
+  const totalMin = today.reduce((a,s)=>a+s.minutes,0)+currentMin;
+  const totalKm = today.reduce((a,s)=>a+s.km,0)+currentKm;
+  const gm=Number(state.settings.goalMinutes)||30, gk=Number(state.settings.goalKm)||2;
+  const p1=gm?totalMin/gm:0, p2=gk?totalKm/gk:0;
+  const p=Math.min(100, Math.round(Math.max(p1,p2)*100));
+  $("goalText").textContent = `اليوم: ${totalMin.toFixed(0)} دقيقة / ${totalKm.toFixed(2)} كم — الهدف ${gm} دقيقة أو ${gk} كم`;
+  $("goalProgress").style.width=p+"%";
+  $("goalPercent").textContent=p+"%";
+}
+function todayKey(d=new Date()){return d.toISOString().slice(0,10)}
+function todaySessions(){ const k=todayKey(); return state.sessions.filter(s=>s.date===k); }
+
+function startWalk(){
+  if(running && paused){ paused=false; startTime=Date.now(); $("pauseBtn").textContent="إيقاف مؤقت"; tick(); return; }
+  running=true; paused=false; startTime=Date.now(); elapsedBeforePause=0; distanceM=0; lastPos=null; currentSpeedKmh=0;
+  $("startBtn").disabled=true; $("pauseBtn").disabled=false; $("finishBtn").disabled=false;
+  $("gpsStatus").textContent="جاري تتبع المشي... اترك التطبيق مفتوحًا للحصول على أفضل نتيجة.";
+  tick();
+  startGps();
+  keepAwake();
+}
+function pauseWalk(){
+  if(!running) return;
+  if(!paused){
+    elapsedBeforePause += Date.now()-startTime; paused=true; $("pauseBtn").textContent="متابعة";
+    stopGps(); $("gpsStatus").textContent="تم الإيقاف المؤقت.";
+  }else{
+    paused=false; startTime=Date.now(); $("pauseBtn").textContent="إيقاف مؤقت";
+    startGps(); tick();
+  }
+}
+function finishWalk(){
+  if(!running) return;
+  const minutes=Math.max(1, Math.round(nowElapsed()/60000));
+  const km=Number((distanceM/1000).toFixed(2));
+  state.sessions.unshift({id:Date.now(), date:todayKey(), time:new Date().toLocaleTimeString("ar-JO",{hour:"2-digit",minute:"2-digit"}), minutes, km, type:"gps", notes:"جلسة GPS"});
+  saveState();
+  toast("تم حفظ جلسة المشي ✅");
+  resetWalk();
+  renderAll();
+}
+function resetWalk(){
+  running=false; paused=false; elapsedBeforePause=0; distanceM=0; lastPos=null; currentSpeedKmh=0;
+  clearInterval(timerInt); timerInt=null; stopGps();
+  $("startBtn").disabled=false; $("pauseBtn").disabled=true; $("finishBtn").disabled=true; $("pauseBtn").textContent="إيقاف مؤقت";
+  $("gpsStatus").textContent="جاهز للبدء. افتح الموقع عند الطلب للحصول على المسافة والسرعة.";
+  updateUI();
+}
+function tick(){
+  clearInterval(timerInt);
+  timerInt=setInterval(updateUI,1000);
+  updateUI();
+}
+function startGps(){
+  if(!navigator.geolocation){ $("gpsStatus").textContent="GPS غير مدعوم في هذا المتصفح."; return; }
+  watchId=navigator.geolocation.watchPosition(pos=>{
+    const c=pos.coords;
+    const point={latitude:c.latitude, longitude:c.longitude};
+    if(lastPos && !paused){
+      const d=haversine(lastPos, point);
+      if(d>1 && d<100) distanceM += d;
+    }
+    lastPos=point;
+    currentSpeedKmh = c.speed && c.speed>0 ? c.speed*3.6 : currentSpeedKmh;
+    $("gpsStatus").textContent=`GPS يعمل — الدقة تقريبًا ${Math.round(c.accuracy)} متر`;
+    updateUI();
+  }, err=>{
+    $("gpsStatus").innerHTML=`تعذر تشغيل الموقع: ${err.message}. يمكنك استخدام التسجيل السريع.`;
+  }, {enableHighAccuracy:true, maximumAge:1000, timeout:12000});
+}
+function stopGps(){ if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; } }
+async function keepAwake(){
+  try{
+    if("wakeLock" in navigator){
+      await navigator.wakeLock.request("screen");
+    }
+  }catch(e){}
+}
+
+function saveManual(){
+  const minutes=Number($("manualMinutes").value);
+  const km=Number($("manualKm").value || 0);
+  if(!minutes || minutes<1){ toast("أدخل مدة المشي بالدقائق"); return; }
+  state.sessions.unshift({
+    id:Date.now(), date:todayKey(), time:new Date().toLocaleTimeString("ar-JO",{hour:"2-digit",minute:"2-digit"}),
+    minutes, km:Number(km.toFixed(2)), type:"manual", notes:$("manualNotes").value.trim()
+  });
+  saveState(); $("manualMinutes").value=""; $("manualKm").value=""; $("manualNotes").value="";
+  toast("تم حفظ المشي السريع ✅"); renderAll(); showTab("history");
+}
+
+function renderHistory(){
+  const list=$("historyList");
+  if(!state.sessions.length){ list.innerHTML='<div class="small" style="padding:16px">لا يوجد سجل بعد.</div>'; }
+  else{
+    list.innerHTML = state.sessions.map(s=>`
+      <div class="historyItem">
+        <div class="historyTop">
+          <b>${s.date} — ${s.time}</b>
+          <span class="badge ${s.type==='gps'?'ok':'warn'}">${s.type==='gps'?'GPS':'يدوي'}</span>
+        </div>
+        <div class="small">${s.minutes} دقيقة • ${s.km.toFixed(2)} كم ${s.notes? "• "+escapeHtml(s.notes):""}</div>
+      </div>
+    `).join("");
+  }
+  const weekStart = new Date(); weekStart.setDate(weekStart.getDate()-6);
+  const recent = state.sessions.filter(s=>new Date(s.date)>=new Date(weekStart.toISOString().slice(0,10)));
+  $("weekKm").textContent=recent.reduce((a,s)=>a+s.km,0).toFixed(2);
+  $("weekMin").textContent=recent.reduce((a,s)=>a+s.minutes,0);
+  $("sessionsCount").textContent=state.sessions.length;
+  $("streak").textContent=calcStreak();
+}
+function calcStreak(){
+  let streak=0, d=new Date();
+  for(let i=0;i<365;i++){
+    const k=todayKey(d);
+    if(state.sessions.some(s=>s.date===k)){ streak++; d.setDate(d.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]))}
+
+function loadSettingsForm(){
+  const st=state.settings;
+  $("goalMinutes").value=st.goalMinutes; $("goalKm").value=st.goalKm;
+  $("stepLength").value=st.stepLength; $("weightKg").value=st.weightKg;
+  $("walkTime").value=st.walkTime; $("eveningTime").value=st.eveningTime;
+}
+function saveSettings(){
+  state.settings={
+    goalMinutes:Number($("goalMinutes").value)||30,
+    goalKm:Number($("goalKm").value)||2,
+    stepLength:Number($("stepLength").value)||0.75,
+    weightKg:Number($("weightKg").value)||75,
+    walkTime:$("walkTime").value||"18:00",
+    eveningTime:$("eveningTime").value||"21:00",
+  };
+  saveState(); toast("تم حفظ الإعدادات ✅"); renderAll();
+}
+function renderAll(){ loadSettingsForm(); updateGoal(); renderHistory(); scheduleInAppReminders(); }
+
+function showTab(id){
+  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  $(id).classList.add("active");
+  document.querySelector(`.tab[data-tab="${id}"]`).classList.add("active");
+  renderAll();
+}
+
+let reminderTimers=[];
+function scheduleInAppReminders(){
+  reminderTimers.forEach(clearTimeout); reminderTimers=[];
+  scheduleTime(state.settings.walkTime, "حان وقت المشي 🚶‍♂️", "ابدأ 10 دقائق فقط، المهم لا تؤجل.");
+  scheduleTime(state.settings.eveningTime, "تذكير مسائي 🌙", "هل أكملت هدف المشي اليوم؟ سجّل إنجازك الآن.");
+}
+function scheduleTime(hhmm, title, body){
+  if(!hhmm) return;
+  const [h,m]=hhmm.split(":").map(Number);
+  const target=new Date(); target.setHours(h,m,0,0);
+  if(target<Date.now()) target.setDate(target.getDate()+1);
+  const delay=target-Date.now();
+  const id=setTimeout(()=>notify(title, body), delay);
+  reminderTimers.push(id);
+}
+async function enableNotifications(){
+  if(!("Notification" in window)){ toast("المتصفح لا يدعم Notification API"); return; }
+  const p=await Notification.requestPermission();
+  toast(p==="granted" ? "تم تفعيل إذن التنبيهات ✅" : "لم يتم السماح بالتنبيهات");
+}
+function notify(title, body){
+  toast(`<b>${title}</b><br>${body}`);
+  try{
+    if("Notification" in window && Notification.permission==="granted"){
+      new Notification(title, {body, icon:"icon-192.png"});
+    }
+  }catch(e){}
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download="walking-backup.json"; a.click();
+  URL.revokeObjectURL(url);
+}
+function importData(file){
+  const r=new FileReader();
+  r.onload=()=>{
+    try{ state=JSON.parse(r.result); saveState(); renderAll(); toast("تم الاستيراد بنجاح ✅"); }
+    catch(e){ toast("ملف غير صالح"); }
+  };
+  r.readAsText(file);
+}
+
+$("startBtn").onclick=startWalk;
+$("pauseBtn").onclick=pauseWalk;
+$("finishBtn").onclick=finishWalk;
+$("resetBtn").onclick=resetWalk;
+$("saveManual").onclick=saveManual;
+$("saveSettings").onclick=saveSettings;
+$("enableLocalNotify").onclick=enableNotifications;
+$("testNotify").onclick=()=>notify("اختبار رفيق المشي", "هذا تنبيه تجريبي من التطبيق.");
+$("exportData").onclick=exportData;
+$("importBtn").onclick=()=>$("importFile").click();
+$("importFile").onchange=e=>e.target.files[0] && importData(e.target.files[0]);
+$("clearHistory").onclick=()=>{ if(confirm("حذف كل السجل؟")){ state.sessions=[]; saveState(); renderAll(); } };
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showTab(t.dataset.tab));
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>navigator.serviceWorker.register("service-worker.js").catch(()=>{}));
+}
+renderAll();
+updateUI();
+</script>
+</body>
+</html>
